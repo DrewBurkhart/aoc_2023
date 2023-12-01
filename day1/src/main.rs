@@ -11,11 +11,14 @@ fn main() {
         .expect("Should have been able to parse");
     let lines = test_input.lines();
 
+    // Define a regular expression pattern to match spelled-out digits
+    let re = Regex::new(r"(one|two|three|four|five|six|seven|eight|nine)").unwrap();
+
     // Use Rayon's parallel iterator to process lines in parallel
     sum = lines
         .par_bridge()
         .map(|line| {
-            let (int1, int2) = extract_integers(line);
+            let (int1, int2) = extract_integers(line, &re);
             (int1 * 10) + int2
         })
         .sum();
@@ -23,8 +26,8 @@ fn main() {
     println!("{}", sum);
 }
 
-fn extract_integers(input: &str) -> (i32, i32) {
-    let mod_string = parse_to_mod_string(String::from(input));
+fn extract_integers(input: &str, re: &Regex) -> (i32, i32) {
+    let mod_string = parse_to_mod_string(String::from(input), re);
     let matcher = Regex::new(r"\d").unwrap();
     let integers: Vec<i32> = matcher
         .find_iter(&mod_string)
@@ -44,10 +47,7 @@ fn extract_integers(input: &str) -> (i32, i32) {
     }
 }
 
-fn parse_to_mod_string(input: String) -> String {
-    // Define a regular expression pattern to match spelled-out digits
-    let re = Regex::new(r"(one|two|three|four|five|six|seven|eight|nine)").unwrap();
-
+fn parse_to_mod_string(input: String, re: &Regex) -> String {
     // Initialize an empty result string
     let mut replaced_input;
 
