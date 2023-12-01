@@ -1,5 +1,6 @@
 use rayon::prelude::*;
 use regex::Regex;
+use std::borrow::Cow;
 use std::fs;
 
 fn main() {
@@ -27,7 +28,7 @@ fn main() {
 }
 
 fn extract_integers(input: &str, re: &Regex) -> (i32, i32) {
-    let mod_string = parse_to_mod_string(String::from(input), re);
+    let mod_string = parse_to_mod_string(input, re);
     let matcher = Regex::new(r"\d").unwrap();
     let integers: Vec<i32> = matcher
         .find_iter(&mod_string)
@@ -40,44 +41,39 @@ fn extract_integers(input: &str, re: &Regex) -> (i32, i32) {
     } else if integers.len() == 1 {
         return (integers[0], integers[0]);
     } else {
-        return (
-            integers.first().unwrap().clone(),
-            integers.last().unwrap().clone(),
-        );
+        return (*integers.first().unwrap(), *integers.last().unwrap());
     }
 }
 
-fn parse_to_mod_string(input: String, re: &Regex) -> String {
+fn parse_to_mod_string(input: &str, re: &Regex) -> String {
     // Initialize an empty result string
     let mut replaced_input;
 
     let mut input = input;
     loop {
         // Replace the first occurrence of the pattern in the input
-        let new_input = re
-            .replace(&input, |caps: &regex::Captures| {
-                match &caps[0] {
-                    "one" => "o1e".to_string(),
-                    "two" => "t2o".to_string(),
-                    "three" => "t3e".to_string(),
-                    "four" => "f4r".to_string(),
-                    "five" => "f5e".to_string(),
-                    "six" => "s6x".to_string(),
-                    "seven" => "s7n".to_string(),
-                    "eight" => "e8t".to_string(),
-                    "nine" => "n9e".to_string(),
-                    _ => caps[0].to_string(), // If not recognized, keep the original text
-                }
-            })
-            .to_string();
+        let new_input = re.replace(input, |caps: &regex::Captures| {
+            match &caps[0] {
+                "one" => Cow::Borrowed("o1e"),
+                "two" => Cow::Borrowed("t2o"),
+                "three" => Cow::Borrowed("t3e"),
+                "four" => Cow::Borrowed("f4r"),
+                "five" => Cow::Borrowed("f5e"),
+                "six" => Cow::Borrowed("s6x"),
+                "seven" => Cow::Borrowed("s7n"),
+                "eight" => Cow::Borrowed("e8t"),
+                "nine" => Cow::Borrowed("n9e"),
+                _ => Cow::Owned(caps[0].to_string()), // If not recognized, create an owned string
+            }
+        });
 
-        replaced_input = String::from(new_input.clone());
+        replaced_input = new_input.to_string();
 
         // Check if there are more occurrences of the pattern in the new input
         if input == new_input {
             break; // No more replacements needed
         } else {
-            input = new_input; // Continue with the new input
+            input = &new_input; // Continue with the new input
         }
     }
     replaced_input
