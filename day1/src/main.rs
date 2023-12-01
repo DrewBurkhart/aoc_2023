@@ -10,58 +10,70 @@ fn main() {
         .expect("Should have been able to parse");
     let lines = test_input.lines();
     for line in lines {
-        println!("VALUE: {}", line);
         let (int1, int2) = extract_integers(line);
-        println!("ANSWER: {}\n", ((int1 * 10) + int2));
         sum += (int1 * 10) + int2;
     }
     println!("{}", sum);
 }
 
 fn extract_integers(input: &str) -> (i32, i32) {
-    let matcher = Regex::new(r"(one|two|three|four|five|six|seven|eight|nine|\d)").unwrap();
+    let mod_string = parse_to_mod_string(String::from(input));
+    let matcher = Regex::new(r"\d").unwrap();
+    let integers: Vec<i32> = matcher
+        .find_iter(&mod_string)
+        .map(|m| m.as_str().parse::<i32>())
+        .filter_map(Result::ok)
+        .collect();
 
-    // Find all integer matches in the input string
-    let matches: Vec<_> = matcher.find_iter(input).collect();
-
-    if matches.is_empty() {
-        println!("No integers found.");
+    if integers.is_empty() {
         return (0, 0);
-    } else if matches.len() == 1 {
+    } else if integers.len() == 1 {
         // Only one integer found
-        let matched_text = matches[0].as_str();
-        if let Ok(parsed_integer) = matched_text.parse::<i32>() {
-            return (parsed_integer, parsed_integer);
-        } else {
-            let parsed_integer = parse_to_int(matched_text);
-            return (parsed_integer, parsed_integer);
-        }
+        return (integers[0], integers[0]);
     } else {
         // First and last integers found
-        let first_matched_text = matches[0].as_str();
-        let last_matched_text = matches.last().unwrap().as_str();
-        let first_integer = first_matched_text
-            .parse::<i32>()
-            .unwrap_or_else(|_| parse_to_int(first_matched_text));
-        let last_integer = last_matched_text
-            .parse::<i32>()
-            .unwrap_or_else(|_| parse_to_int(last_matched_text));
-
-        return (first_integer, last_integer);
+        return (
+            integers.first().unwrap().clone(),
+            integers.last().unwrap().clone(),
+        );
     }
 }
 
-fn parse_to_int(input: &str) -> i32 {
-    return match input {
-        "one" => 1,
-        "two" => 2,
-        "three" => 3,
-        "four" => 4,
-        "five" => 5,
-        "six" => 6,
-        "seven" => 7,
-        "eight" => 8,
-        "nine" => 9,
-        _ => 0,
-    };
+fn parse_to_mod_string(input: String) -> String {
+    // Define a regular expression pattern to match spelled-out digits
+    let re = Regex::new(r"(one|two|three|four|five|six|seven|eight|nine)").unwrap();
+
+    // Initialize an empty result string
+    let mut replaced_input;
+
+    let mut input = input;
+    loop {
+        // Replace the first occurrence of the pattern in the input
+        let new_input = re
+            .replace(&input, |caps: &regex::Captures| {
+                match &caps[0] {
+                    "one" => "o1e".to_string(),
+                    "two" => "t2o".to_string(),
+                    "three" => "t3e".to_string(),
+                    "four" => "f4r".to_string(),
+                    "five" => "f5e".to_string(),
+                    "six" => "s6x".to_string(),
+                    "seven" => "s7n".to_string(),
+                    "eight" => "e8t".to_string(),
+                    "nine" => "n9e".to_string(),
+                    _ => caps[0].to_string(), // If not recognized, keep the original text
+                }
+            })
+            .to_string();
+
+        replaced_input = String::from(new_input.clone());
+
+        // Check if there are more occurrences of the pattern in the new input
+        if input == new_input {
+            break; // No more replacements needed
+        } else {
+            input = new_input; // Continue with the new input
+        }
+    }
+    replaced_input
 }
