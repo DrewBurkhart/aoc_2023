@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use regex::Regex;
 use std::fs;
 
@@ -9,10 +10,16 @@ fn main() {
         .parse()
         .expect("Should have been able to parse");
     let lines = test_input.lines();
-    for line in lines {
-        let (int1, int2) = extract_integers(line);
-        sum += (int1 * 10) + int2;
-    }
+
+    // Use Rayon's parallel iterator to process lines in parallel
+    sum = lines
+        .par_bridge()
+        .map(|line| {
+            let (int1, int2) = extract_integers(line);
+            (int1 * 10) + int2
+        })
+        .sum();
+
     println!("{}", sum);
 }
 
@@ -28,10 +35,8 @@ fn extract_integers(input: &str) -> (i32, i32) {
     if integers.is_empty() {
         return (0, 0);
     } else if integers.len() == 1 {
-        // Only one integer found
         return (integers[0], integers[0]);
     } else {
-        // First and last integers found
         return (
             integers.first().unwrap().clone(),
             integers.last().unwrap().clone(),
@@ -77,3 +82,4 @@ fn parse_to_mod_string(input: String) -> String {
     }
     replaced_input
 }
+
