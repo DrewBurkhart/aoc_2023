@@ -19,6 +19,7 @@ fn get_solution(problem: String) {
         "21" => day2::problem1(),
         "22" => day2::problem2(),
         "31" => day3::problem1(),
+        "32" => day3::problem2(),
         _ => panic!("Unkown problem"),
     };
     println!("Completed in {} ms", time.elapsed().as_millis());
