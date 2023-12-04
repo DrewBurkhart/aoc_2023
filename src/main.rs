@@ -3,6 +3,7 @@ use std::{env, time::Instant};
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 
 fn main() {
     let problem = env::args()
@@ -20,6 +21,8 @@ fn get_solution(problem: String) {
         "22" => day2::problem2(),
         "31" => day3::problem1(),
         "32" => day3::problem2(),
+        "41" => day4::problem1(),
+        "42" => day4::problem2(),
         _ => panic!("Unkown problem"),
     };
     println!("Completed in {} ms", time.elapsed().as_millis());
