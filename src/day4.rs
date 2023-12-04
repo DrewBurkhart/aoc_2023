@@ -5,27 +5,23 @@ struct Game<'a> {
 
 pub(crate) fn problem1() {
     let input = std::fs::read_to_string("inputs/input4.txt").expect("should've been able to read");
-    let lines = input.lines();
-    let mut sum: usize = 0;
-    for l in lines {
-        let game = extract_game(l);
-        let win_count = game
-            .player_numbers
-            .iter()
-            .filter(|&&item| game.winning_numbers.contains(&item))
-            .count();
-        let score = if win_count > 1 {
-            let mut sum = 1;
-            for _ in 1..win_count {
-                sum *= 2;
+    let sum: usize = input
+        .lines()
+        .map(|l| extract_game(l))
+        .map(|game| {
+            let win_count = game
+                .player_numbers
+                .iter()
+                .filter(|&&item| game.winning_numbers.contains(&item))
+                .count();
+            if win_count > 1 {
+                2usize.pow(win_count as u32 - 1)
+            } else {
+                win_count
             }
-            sum
-        } else {
-            win_count
-        };
+        })
+        .sum();
 
-        sum += score
-    }
     println!("{}", sum);
 }
 
