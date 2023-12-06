@@ -28,9 +28,9 @@ fn parse_lines_multiple(input: &str) -> (Vec<usize>, Vec<usize>) {
 
 fn find_ways_to_win(time: usize, distance: usize) -> usize {
     let diff = ((time * time - 4 * distance) as f64).sqrt();
-    let lower_bound = (time as f64 - diff) / 2.0;
-    let upper_bound = (time as f64 + diff) / 2.0;
-    (upper_bound.floor() - lower_bound.ceil()) as usize + 1
+    let lower_bound = ((time as f64 - diff) / 2.0) + 1.0;
+    let upper_bound = ((time as f64 + diff) / 2.0) - 1.0;
+    (upper_bound.ceil() - lower_bound.floor()) as usize + 1
 }
 
 pub(crate) fn problem2() {
