@@ -1,6 +1,6 @@
 pub(crate) fn problem1() {
     let input = std::fs::read_to_string("inputs/input6.txt").expect("should've been able to read");
-    let (race_times, record_distances) = parse_lines_multiple(input);
+    let (race_times, record_distances) = parse_lines_multiple(&input);
     println!(
         "{}",
         race_times
@@ -11,12 +11,12 @@ pub(crate) fn problem1() {
     )
 }
 
-fn parse_lines_multiple(input: String) -> (Vec<usize>, Vec<usize>) {
+fn parse_lines_multiple(input: &str) -> (Vec<usize>, Vec<usize>) {
     let (line_1, line_2) = input.split_once('\n').unwrap();
     let race_times = line_1
         .split_whitespace()
         .skip(1)
-        .map(|w| w.parse().unwrap())
+        .map(|word| word.parse().unwrap())
         .collect::<Vec<_>>();
     let record_distances = line_2
         .split_whitespace()
@@ -35,11 +35,11 @@ fn find_ways_to_win(time: usize, distance: usize) -> usize {
 
 pub(crate) fn problem2() {
     let input = std::fs::read_to_string("inputs/input6.txt").expect("should've been able to read");
-    let (race_times, record_distances) = parse_lines_single(input);
+    let (race_times, record_distances) = parse_lines_single(&input);
     println!("{}", find_ways_to_win(race_times, record_distances));
 }
 
-fn parse_lines_single(input: String) -> (usize, usize) {
+fn parse_lines_single(input: &str) -> (usize, usize) {
     let (line_1, line_2) = input.split_once('\n').unwrap();
     let race_times = line_1
         .split_whitespace()
