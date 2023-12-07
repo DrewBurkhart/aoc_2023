@@ -1,13 +1,24 @@
+use std::cell::RefCell;
 use std::{collections::HashMap, fs};
 
+thread_local! {
+    static USE_JOKERS: RefCell<bool> = RefCell::new(true);
+}
+
 pub(crate) fn problem1() {
-    let input = fs::read_to_string("inputs/input7.txt").expect("should've been able to read");
-    println!("{}", process(&input));
+    USE_JOKERS.with(|use_jokers| {
+        *use_jokers.borrow_mut() = false; // Set "J" to be worth 1
+        let input = fs::read_to_string("inputs/input7.txt").expect("should've been able to read");
+        println!("{}", process(&input));
+    });
 }
 
 pub(crate) fn problem2() {
-    let input = fs::read_to_string("inputs/input7.txt").expect("should've been able to read");
-    println!("{}", process(&input));
+    USE_JOKERS.with(|use_jokers| {
+        *use_jokers.borrow_mut() = true; // Set "J" to be worth 11
+        let input = fs::read_to_string("inputs/input7.txt").expect("should've been able to read");
+        println!("{}", process(&input));
+    });
 }
 
 #[derive(PartialEq, Debug)]
@@ -43,11 +54,17 @@ impl HandType {
 }
 
 fn card_to_val(c: char) -> i32 {
-    match c {
+    USE_JOKERS.with(|use_jokers| match c {
         'A' => 14,
         'K' => 13,
         'Q' => 12,
-        'J' => 1,
+        'J' => {
+            if *use_jokers.borrow() {
+                1
+            } else {
+                11
+            }
+        }
         'T' => 10,
         '9' => 9,
         '8' => 8,
@@ -58,7 +75,7 @@ fn card_to_val(c: char) -> i32 {
         '3' => 3,
         '2' => 2,
         _ => 0,
-    }
+    })
 }
 
 impl PartialOrd for HandType {
@@ -95,13 +112,17 @@ fn extract_hand(s: &str) -> Hand {
 
     let mut frequencies: HashMap<char, u32> = HashMap::new();
     let mut j_count = 0;
-    for card in cards.chars() {
-        if card == 'J' {
-            j_count += 1;
-            continue;
+    USE_JOKERS.with(|use_jokers| {
+        for card in cards.chars() {
+            if *use_jokers.borrow() {
+                if card == 'J' {
+                    j_count += 1;
+                    continue;
+                }
+            }
+            *frequencies.entry(card).or_default() += 1;
         }
-        *frequencies.entry(card).or_default() += 1;
-    }
+    });
 
     let mut list = frequencies.into_iter().map(|c| c.1).collect::<Vec<_>>();
     list.sort();
@@ -131,7 +152,7 @@ fn extract_hand(s: &str) -> Hand {
 }
 
 fn process(s: &str) -> i64 {
-    let mut hands = s.lines().map(extract_hand).collect::<Vec<_>>();
+    let mut hands = s.lines().map(|line| extract_hand(line)).collect::<Vec<_>>();
     hands.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     hands
