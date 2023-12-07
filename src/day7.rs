@@ -5,6 +5,11 @@ pub(crate) fn problem1() {
     println!("{}", process(&input));
 }
 
+pub(crate) fn problem2() {
+    let input = fs::read_to_string("inputs/input7.txt").expect("should've been able to read");
+    println!("{}", process(&input));
+}
+
 #[derive(PartialEq, Debug)]
 struct Hand {
     bid: i64,
@@ -42,7 +47,7 @@ fn card_to_val(c: char) -> i32 {
         'A' => 14,
         'K' => 13,
         'Q' => 12,
-        'J' => 11,
+        'J' => 1,
         'T' => 10,
         '9' => 9,
         '8' => 8,
@@ -89,11 +94,24 @@ fn extract_hand(s: &str) -> Hand {
     let bid = parts.next().unwrap().parse().unwrap();
 
     let mut frequencies: HashMap<char, u32> = HashMap::new();
+    let mut j_count = 0;
     for card in cards.chars() {
+        if card == 'J' {
+            j_count += 1;
+            continue;
+        }
         *frequencies.entry(card).or_default() += 1;
     }
+
     let mut list = frequencies.into_iter().map(|c| c.1).collect::<Vec<_>>();
     list.sort();
+
+    // Account for all Js
+    if list.is_empty() {
+        list = vec![j_count];
+    } else {
+        *list.last_mut().unwrap() += j_count;
+    }
 
     let hand_type = match list.as_slice() {
         [5] => HandType::FiveOfAKind,
@@ -121,8 +139,4 @@ fn process(s: &str) -> i64 {
         .zip(1..)
         .map(|(hand, n)| hand.bid * n)
         .sum::<i64>()
-}
-
-pub(crate) fn problem2() {
-    println!("not implemented");
 }
