@@ -11,12 +11,12 @@ pub(crate) fn problem1() {
     println!(
         "{}",
         lines
-            .map(|line| predict_next_value(line))
+            .map(|line| predict_next_value(line, false))
             .sum::<i64>()
     );
 }
 
-fn predict_next_value(values: Vec<i64>) -> i64 {
+fn predict_next_value(values: Vec<i64>, beginning: bool) -> i64 {
     let mut differences = Vec::new();
 
     let mut curr_difference = values;
@@ -30,10 +30,30 @@ fn predict_next_value(values: Vec<i64>) -> i64 {
             .collect();
     }
 
+    if !beginning {
         differences.into_iter().map(|v| *v.last().unwrap()).sum()
+    } else {
+        let mut running_difference = 0;
+        differences.into_iter().rev().for_each(|v| {
+            running_difference = v.first().unwrap() - running_difference;
+        });
 
+        running_difference
+    }
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input9.txt").expect("shoud've been able to read");
+    let lines = input.lines().map(|line| {
+        line.split_ascii_whitespace()
+            .map(|n| n.parse::<i64>().unwrap())
+            .collect::<Vec<_>>()
+    });
+
+    println!(
+        "{}",
+        lines
+            .map(|line| predict_next_value(line, true))
+            .sum::<i64>()
+    );
 }
