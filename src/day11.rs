@@ -2,19 +2,24 @@ use std::fs;
 
 #[derive(Debug)]
 struct Galaxy {
-    x: i32,
-    y: i32,
+    x: i64,
+    y: i64,
 }
 
 pub(crate) fn problem1() {
     let input = fs::read_to_string("inputs/input11.txt").expect("should've been able to read");
     let (mut galaxies, (width, height)) = parse(&input);
-    galaxies = expand_galaxies(galaxies, width, height);
+    galaxies = expand_galaxies(galaxies, width, height, None);
 
     println!("{}", distances(&galaxies));
 }
 
-fn expand_galaxies(mut galaxies: Vec<Galaxy>, width: i32, height: i32) -> Vec<Galaxy> {
+fn expand_galaxies(
+    mut galaxies: Vec<Galaxy>,
+    width: i64,
+    height: i64,
+    scale: Option<i64>,
+) -> Vec<Galaxy> {
     let x_expansions = (0..width)
         .rev()
         .filter(|n| !galaxies.iter().any(|galaxy| galaxy.x == *n))
@@ -27,21 +32,29 @@ fn expand_galaxies(mut galaxies: Vec<Galaxy>, width: i32, height: i32) -> Vec<Ga
     for x in x_expansions {
         for galaxy in &mut galaxies {
             if galaxy.x > x {
-                galaxy.x += 1;
+                galaxy.x += if let Some(scale) = scale {
+                    scale - 1
+                } else {
+                    1
+                };
             }
         }
     }
     for y in y_expansions {
         for galaxy in &mut galaxies {
             if galaxy.y > y {
-                galaxy.y += 1;
+                galaxy.y += if let Some(scale) = scale {
+                    scale - 1
+                } else {
+                    1
+                };
             }
         }
     }
     galaxies
 }
 
-fn parse(s: &str) -> (Vec<Galaxy>, (i32, i32)) {
+fn parse(s: &str) -> (Vec<Galaxy>, (i64, i64)) {
     let mut galaxies = Vec::new();
     let mut width = 0;
     let mut height = 0;
@@ -51,30 +64,34 @@ fn parse(s: &str) -> (Vec<Galaxy>, (i32, i32)) {
             width = x + 1;
             if c == '#' {
                 galaxies.push(Galaxy {
-                    x: x as i32,
-                    y: y as i32,
+                    x: x as i64,
+                    y: y as i64,
                 });
             }
         }
     }
 
-    (galaxies, (width as i32, height as i32))
+    (galaxies, (width as i64, height as i64))
 }
 
-fn find_taxi_distance(galaxy_1: &Galaxy, galaxy_2: &Galaxy) -> i32 {
+fn find_taxi_distance(galaxy_1: &Galaxy, galaxy_2: &Galaxy) -> i64 {
     (galaxy_1.x - galaxy_2.x).abs() + (galaxy_1.y - galaxy_2.y).abs()
 }
 
-fn distances(galaxies: &[Galaxy]) -> i32 {
+fn distances(galaxies: &[Galaxy]) -> i64 {
     (0..galaxies.len())
         .map(|i| {
             (i + 1..galaxies.len())
                 .map(|j| find_taxi_distance(&galaxies[i], &galaxies[j]))
-                .sum::<i32>()
+                .sum::<i64>()
         })
         .sum()
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input11.txt").expect("should've been able to read");
+    let (mut galaxies, (width, height)) = parse(&input);
+    galaxies = expand_galaxies(galaxies, width, height, Some(1_000_000));
+
+    println!("{}", distances(&galaxies));
 }
