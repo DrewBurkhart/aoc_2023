@@ -1,4 +1,4 @@
-use std::{fmt::Debug, fs, ops::Index};
+use std::{collections::HashSet, fmt::Debug, fs, ops::Index};
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
 enum PipeKind {
@@ -26,6 +26,13 @@ enum Direction {
     West,
 }
 
+const ALL_DIRECTIONS: [Direction; 4] = [
+    Direction::North,
+    Direction::East,
+    Direction::South,
+    Direction::West,
+];
+
 impl Direction {
     fn oposite(&self) -> Self {
         match self {
@@ -33,6 +40,14 @@ impl Direction {
             Direction::South => Direction::North,
             Direction::East => Direction::West,
             Direction::West => Direction::East,
+        }
+    }
+    fn right(&self) -> Self {
+        match self {
+            Direction::North => Direction::East,
+            Direction::South => Direction::West,
+            Direction::East => Direction::South,
+            Direction::West => Direction::North,
         }
     }
 }
@@ -51,6 +66,18 @@ impl PipeKind {
             _ => panic!("Unknown character"),
         }
     }
+    fn to_char(self) -> char {
+        match self {
+            Self::NS => '|',
+            Self::EW => '-',
+            Self::NE => 'L',
+            Self::NW => 'J',
+            Self::SW => '7',
+            Self::SE => 'F',
+            Self::G => '.',
+            Self::S => 'S',
+        }
+    }
     fn directions(&self) -> Vec<Direction> {
         match self {
             PipeKind::NS => vec![Direction::North, Direction::South],
@@ -66,6 +93,19 @@ impl PipeKind {
                 Direction::South,
                 Direction::West,
             ],
+        }
+    }
+    fn from_directions(directions: &[Direction; 2]) -> Self {
+        let mut directions = *directions;
+        directions.sort();
+        match directions {
+            [Direction::North, Direction::South] => PipeKind::NS,
+            [Direction::East, Direction::West] => PipeKind::EW,
+            [Direction::North, Direction::East] => PipeKind::NE,
+            [Direction::North, Direction::West] => PipeKind::NW,
+            [Direction::South, Direction::West] => PipeKind::SW,
+            [Direction::East, Direction::South] => PipeKind::SE,
+            _ => panic!(),
         }
     }
 }
@@ -217,6 +257,7 @@ pub(crate) fn problem1() {
         pipes = pipes
             .iter()
             .filter_map(|(pipe, dir)| {
+                // we write to the distance map and return None if it was not written
                 if write_dist(pipe.idx, distance, &mut dist_map) {
                     map.next_pipe(pipe, dir)
                 } else {
@@ -241,5 +282,98 @@ fn write_dist(idx: Idx, dist: i64, map: &mut [Vec<i64>]) -> bool {
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input10.txt").expect("should've been able to read");
+    let map = Map::from_lines(input.clone());
+
+    let start = map.find_start().unwrap();
+
+    let pipes = map.find_connecting_pipes(start);
+    assert!(pipes.len() == 2);
+    let mut start_dirs = [pipes[0].1, pipes[1].1];
+    start_dirs.sort();
+    let start_kind = PipeKind::from_directions(&start_dirs);
+
+    let pipidx = 0;
+    let (mut pipe, mut dir) = pipes[pipidx];
+
+    let mut loop_map: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+
+    loop_map[start.0][start.1] = start_kind.to_char();
+
+    let mut rot = 0;
+
+    while pipe.idx != start {
+        loop_map[pipe.idx.0][pipe.idx.1] = 'x';
+        let olddir = dir;
+        (pipe, dir) = map.next_pipe(&pipe, &dir).unwrap();
+        rot += get_rot(&olddir, &dir);
+    }
+
+    let (mut pipe, mut dir) = if rot > 0 {
+        pipes[pipidx]
+    } else {
+        pipes[1 - pipidx]
+    };
+
+    let mut insides = HashSet::new();
+
+    while pipe.idx != start {
+        if let Some(idx) = map.idx_direction(pipe.idx, &dir.right()) {
+            if loop_map[idx.0][idx.1] != 'x' && loop_map[idx.0][idx.1] != 'I' {
+                loop_map[idx.0][idx.1] = 'I';
+                insides.insert(idx);
+            }
+        }
+        (pipe, dir) = map.next_pipe(&pipe, &dir).unwrap();
+    }
+
+    let mut active = insides.clone();
+    while active.iter().len() > 0 {
+        let idxs: Vec<Idx> = active.iter().copied().collect();
+        active.clear();
+        for idx in idxs {
+            for direction in ALL_DIRECTIONS {
+                if let Some(next_idx) = map.idx_direction(idx, &direction) {
+                    let next_val = loop_map[next_idx.0][next_idx.1];
+                    if next_val != 'I' && next_val != 'x' {
+                        insides.insert(next_idx);
+                        active.insert(next_idx);
+                        loop_map[next_idx.0][next_idx.1] = 'I';
+                    }
+                }
+            }
+        }
+    }
+
+    let solution = insides.len();
+    println!("{}", solution);
+}
+
+fn get_rot(olddir: &Direction, dir: &Direction) -> i64 {
+    match olddir {
+        Direction::North => match dir {
+            Direction::North => 0,
+            Direction::East => 1,
+            Direction::West => -1,
+            _ => panic!("wrong direction"),
+        },
+        Direction::East => match dir {
+            Direction::East => 0,
+            Direction::North => -1,
+            Direction::South => 1,
+            _ => panic!("wrong direction"),
+        },
+        Direction::South => match dir {
+            Direction::South => 0,
+            Direction::West => 1,
+            Direction::East => -1,
+            _ => panic!("wrong direction"),
+        },
+        Direction::West => match dir {
+            Direction::West => 0,
+            Direction::North => 1,
+            Direction::South => -1,
+            _ => panic!("wrong direction"),
+        },
+    }
 }
