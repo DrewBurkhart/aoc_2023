@@ -11,6 +11,7 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
+mod day12;
 
 fn main() {
     let problem = env::args()
@@ -44,6 +45,8 @@ fn get_solution(problem: String) {
         "102" => day10::problem2(),
         "111" => day11::problem1(),
         "112" => day11::problem2(),
+        "121" => day12::problem1(),
+        "122" => day12::problem2(),
         _ => panic!("Unkown problem"),
     };
     println!("Completed in {} ms", time.elapsed().as_millis());
