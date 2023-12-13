@@ -1,5 +1,7 @@
 use std::fs;
 
+use itertools::Itertools;
+
 fn calculate_possibilities<'a>(
     s: &'a [u8],
     within: Option<usize>,
@@ -63,5 +65,21 @@ pub(crate) fn problem1() {
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input12.txt").expect("should've been able to read");
+    let p2 = input
+        .trim()
+        .split('\n')
+        .map(|l| {
+            let (vents, rest) = l.split_once(' ').unwrap();
+            let nums = rest
+                .split(',')
+                .map(|w| w.parse::<usize>().unwrap())
+                .collect::<Vec<_>>();
+            let expanded_vents = (0..5).map(|_| vents).join("?");
+            let expanded_nums = (0..5).flat_map(|_| &nums).copied().collect::<Vec<_>>();
+            let p2 = calculate_possibilities(expanded_vents.as_bytes(), None, &expanded_nums);
+            p2
+        })
+        .sum::<usize>();
+    println!("{}", p2);
 }
