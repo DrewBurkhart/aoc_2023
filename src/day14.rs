@@ -5,11 +5,11 @@ pub(crate) fn problem1() {
     let lines: Vec<String> = input.lines().map(|line| line.to_string()).collect();
     let mut platform: Vec<Vec<char>> = lines.iter().map(|line| line.chars().collect()).collect();
 
-    println!("{}", tilt_platform_north(&mut platform));
+    tilt_platform_north(&mut platform);
+    println!("{}", calculate_load(&platform));
 }
 
-fn tilt_platform_north(platform: &mut Vec<Vec<char>>) -> usize {
-    let mut total_load = 0;
+fn tilt_platform_north(platform: &mut Vec<Vec<char>>) {
     for col in 0..platform[0].len() {
         let mut stop_row = 0;
 
@@ -19,17 +19,27 @@ fn tilt_platform_north(platform: &mut Vec<Vec<char>>) -> usize {
             } else if platform[row][col] == 'O' {
                 if row <= platform.len() {
                     platform[stop_row][col] = 'O';
-                    total_load += platform.len() - stop_row;
                     stop_row += 1;
                 }
 
-                platform[row][col] = '.';
+                if stop_row - 1 != row {
+                    platform[row][col] = '.';
+                }
             }
         }
     }
-    total_load
 }
 
+fn calculate_load(platform: &Vec<Vec<char>>) -> usize {
+    (0..platform.len())
+        .map(|row| {
+            (0..platform[0].len())
+                .filter(|&col| platform[row][col] == 'O')
+                .map(|_| platform.len() - row)
+                .sum::<usize>()
+        })
+        .sum()
+}
 pub(crate) fn problem2() {
     println!("not implemented");
 }
