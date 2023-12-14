@@ -54,5 +54,12 @@ pub(crate) fn problem1() {
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input13.txt").expect("should've been able to read");
+    let trimmed_input = input.trim();
+    let grids = trimmed_input
+        .split("\n\n")
+        .map(|s| s.split('\n').map(|l| l.as_bytes()).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+    let result = solve(&grids, 1);
+    println!("{}", result);
 }
