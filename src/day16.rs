@@ -49,5 +49,17 @@ pub(crate) fn problem1() {
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input16.txt").expect("should've been able to read");
+    let grid = input
+        .trim()
+        .split('\n')
+        .map(str::as_bytes)
+        .collect::<Vec<_>>();
+    let p2 = (0..grid.len())
+        .flat_map(|r| [(r, 0, 1), (r, grid[0].len() - 1, 3)])
+        .chain((0..grid[0].len()).flat_map(|c| [(0, c, 2), (grid.len() - 1, c, 0)]))
+        .map(|start| energized_tiles(&grid, start))
+        .max()
+        .unwrap();
+    println!("{}", p2)
 }
