@@ -63,5 +63,11 @@ pub(crate) fn problem1() {
 }
 
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input17.txt").expect("should've been able to read");
+    let grid = input
+        .trim()
+        .split('\n')
+        .map(str::as_bytes)
+        .collect::<Vec<_>>();
+    println!("{}", find_shortest_path(&grid, 4, 10));
 }
