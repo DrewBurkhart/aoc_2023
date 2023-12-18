@@ -58,6 +58,37 @@ fn parse_input(s: &str) -> Vec<(i64, i64)> {
         .collect::<Vec<_>>()
 }
 
+fn parse_input_swapped(s: &str) -> Vec<(i64, i64)> {
+    let mut curr_pos = (0, 0);
+
+    s.lines()
+        .map(|line| line.split(' ').skip(2))
+        .map(|mut vals| {
+            let code = &vals.next().unwrap()[2..];
+            let n = i64::from_str_radix(&code[0..5], 16).unwrap();
+            (code.chars().nth(5).unwrap(), n)
+        })
+        .map(|(dir, dist)| {
+            curr_pos = match dir {
+                '1' => (curr_pos.0, curr_pos.1 + dist),
+                '3' => (curr_pos.0, curr_pos.1 - dist),
+                '2' => (curr_pos.0 - dist, curr_pos.1),
+                '0' => (curr_pos.0 + dist, curr_pos.1),
+                _ => unreachable!(),
+            };
+            curr_pos
+        })
+        .collect::<Vec<_>>()
+}
+
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input18.txt").expect("should've been able to read");
+    let mut points = parse_input_swapped(&input);
+
+    points.insert(0, (0, 0));
+
+    println!(
+        "{}",
+        calculate_polygon_area(&points) + count_ext_points(&points)
+    );
 }
