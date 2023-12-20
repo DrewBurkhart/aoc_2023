@@ -38,6 +38,34 @@ impl Filter {
             FilterFunc::Lt(n) => val < n,
         }
     }
+
+    fn split_parts(&self, part: &PartPair) -> (PartPair, PartPair) {
+        let mut accepted_part = part.clone();
+        let mut rejected_part = part.clone();
+        fn getter<'a>(part: &'a mut PartPair, attribute: &Attribute) -> &'a mut (usize, usize) {
+            match attribute {
+                Attribute::X => &mut part.x,
+                Attribute::M => &mut part.m,
+                Attribute::A => &mut part.a,
+                Attribute::S => &mut part.s,
+                Attribute::None => unreachable!(),
+            }
+        }
+
+        match self.filter {
+            FilterFunc::Always => {}
+            FilterFunc::Gt(n) => {
+                getter(&mut accepted_part, &self.attribute).0 = n + 1;
+                getter(&mut rejected_part, &self.attribute).1 = n
+            }
+            FilterFunc::Lt(n) => {
+                getter(&mut accepted_part, &self.attribute).1 = n - 1;
+                getter(&mut rejected_part, &self.attribute).0 = n
+            }
+        };
+
+        (accepted_part, rejected_part)
+    }
 }
 
 #[derive(Clone)]
@@ -64,6 +92,23 @@ struct Part {
     m: usize,
     a: usize,
     s: usize,
+}
+
+#[derive(Clone)]
+struct PartPair {
+    x: (usize, usize),
+    m: (usize, usize),
+    a: (usize, usize),
+    s: (usize, usize),
+}
+
+impl std::fmt::Debug for PartPair {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "(x:{}..{}, m:{}..{}, a:{}..{}, s:{}..{})",
+            self.x.0, self.x.1, self.m.0, self.m.1, self.a.0, self.a.1, self.s.0, self.s.1,
+        ))
+    }
 }
 
 pub(crate) fn problem1() {
@@ -196,6 +241,64 @@ fn parse_input(input: &str) -> (Vec<WorkFlow>, Vec<Part>) {
     (workflows.collect(), parts.collect())
 }
 
+fn parse_input_2(s: &str) -> Vec<WorkFlow> {
+    let (workflows, _) = s.split_once("\n\n").unwrap();
+    let workflows = workflows.lines().map(parse_workflow);
+
+    workflows.collect()
+}
+
 pub(crate) fn problem2() {
-    println!("not implemented");
+    let input = fs::read_to_string("inputs/input19.txt").expect("should've been able to read");
+    let workflows = parse_input_2(&input);
+    let total_part = PartPair {
+        x: (1, 4000),
+        m: (1, 4000),
+        a: (1, 4000),
+        s: (1, 4000),
+    };
+
+    let mut workflow_part_pairs: Vec<(WorkFlow, PartPair)> = vec![(
+        workflows
+            .iter()
+            .find(|workflow| &workflow.name == "in")
+            .unwrap()
+            .clone(),
+        total_part,
+    )];
+
+    let mut accepted_ranges = Vec::new();
+    while let Some((workflow, mut part)) = workflow_part_pairs.pop() {
+        for condition in &workflow.conditions {
+            let (accepted_part, rejected_part) = condition.filter.split_parts(&part);
+
+            match &condition.destination {
+                Destination::Accept => {
+                    accepted_ranges.push(accepted_part);
+                }
+                Destination::Reject => {}
+                Destination::WorkFlow(dest) => {
+                    workflow_part_pairs.push((
+                        workflows
+                            .iter()
+                            .find(|workflow| workflow.name == *dest)
+                            .unwrap()
+                            .clone(),
+                        accepted_part,
+                    ));
+                }
+            }
+            part = rejected_part;
+        }
+    }
+
+    fn volume(part: &PartPair) -> usize {
+        fn range_width(range: (usize, usize)) -> usize {
+            range.1 - range.0 + 1
+        }
+
+        range_width(part.x) * range_width(part.m) * range_width(part.a) * range_width(part.s)
+    }
+
+    println!("{}", accepted_ranges.iter().map(volume).sum::<usize>());
 }
