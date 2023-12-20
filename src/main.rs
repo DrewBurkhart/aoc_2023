@@ -13,6 +13,7 @@ mod day17;
 mod day18;
 mod day19;
 mod day2;
+mod day20;
 mod day3;
 mod day4;
 mod day5;
@@ -69,6 +70,8 @@ fn get_solution(problem: String) {
         "182" => day18::problem2(),
         "191" => day19::problem1(),
         "192" => day19::problem2(),
+        "201" => day20::problem1(),
+        "202" => day20::problem2(),
         _ => panic!("Unkown problem"),
     };
     println!("Completed in {} ms", time.elapsed().as_millis());
